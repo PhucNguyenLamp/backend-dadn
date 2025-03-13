@@ -24,6 +24,6 @@ try {
   console.error(err);
 }
 
-let db = client.db("Students");
+let db = client.db("Room");
 
 export default db;

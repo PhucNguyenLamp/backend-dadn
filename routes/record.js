@@ -10,12 +10,13 @@ const router = express.Router();
 // Create a new record
 router.post("/", async (req, res) => {
     try {
-        let newDocument = {
-            name: req.body.name,
-            age: req.body.age,
-            gpa: req.body.gpa,
-        };
+        let newDocument = req.body;
         let collection = db.collection("records");
+
+        if (!newDocument || Object.keys(newDocument).length == 0) {
+            return res.status(400).send("Request cannot be empty");
+        }
+
         let result = await collection.insertOne(newDocument);
         res.send(result).status(204);
     } catch (err) {
