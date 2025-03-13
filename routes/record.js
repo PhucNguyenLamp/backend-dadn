@@ -61,13 +61,15 @@ router.get("/:id", async (req, res) => {
 router.patch("/:id", async (req, res) => {
     try {
         let aidee = new ObjectId(req.params.id);
+        let newDocument = req.body;
+
+        if (!newDocument || Object.keys(newDocument).length == 0) {
+            return res.status(400).send("Request cannot be empty");
+        }
+
         const query = { _id: aidee};
         const updates = {
-            $set: {
-                name: req.body.name,
-                age: req.body.age,
-                gpa: req.body.gpa,
-            },
+            $set: newDocument,
         };
 
         let collection = await db.collection("records");
