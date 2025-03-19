@@ -31,58 +31,142 @@ router.post("/", async (req, res) => {
 
 //Get all records
 router.get("/", async (req, res) => {
-    let { Humidity: humidity, Temperature: temperature } = await db.collection("DHT20_Sensor_Data").findOne({});
-    let { intensity: lightsensor } = await db.collection("Light_Sensor_Data").findOne({});
-    let { fanSpeed: fanspeed } = await db.collection("Log").findOne({ fanSpeed: { $exists: true } });
-    let { intensity: ledintensity } = await db.collection("Log").findOne({ intensity: { $exists: true } });
+    let { Humidity: humidity, Temperature: temperature } =
+        await db.collection("DHT20_Sensor_Data").findOne({}, {
+            sort: { timestamp: -1 },
+            projection: { Humidity: 1, Temperature: 1 }
+        });
+
+    let { intensity: lightsensor } =
+        await db.collection("Light_Sensor_Data").findOne({}, {
+            sort: { timestamp: -1 },
+            projection: { intensity: 1 }
+        });
+
+    let { fanSpeed: fanspeed } =
+        await db.collection("Log").findOne({ fanSpeed: { $exists: true } }, {
+            sort: { timestamp: -1 },
+            projection: { fanSpeed: 1 }
+        });
+
+    let { LEDStatus: ledstatus, LEDColor: ledcolor } =
+        await db.collection("Log").findOne({ LEDColor: { $exists: true } }, {
+            sort: { timestamp: -1 },
+            projection: { LEDStatus: 1, LEDColor: 1 }
+        });
+    
     let distancesensor = 0;
-    let status = true;
+    let status = await db.collection("Device").find({}, {
+        projection: { deviceId: 1, status: 1 }
+    }).toArray();
+    const fan_status = status.find((device) => device._id === "FAN_1").status;
+    const light_status = status.find((device) => device._id === "LED_1").status;
 
     let result = {
         temperature_humidity: {
-            status, temperature, humidity
+            status: null, temperature, humidity
         },
-        light: { status, lightsensor },
-        fan_device: { status, fanspeed },
-        light_device: { status, ledintensity },
+        light: { status: null, lightsensor },
+        fan_device: { status: fan_status, fanspeed },
+        light_device: { status: light_status, ledcolor },
         distance: {
-            status, distancesensor
+            status: null, distancesensor
         }
     };
     res.send(result).status(200);
 });
+
+//logs
+router.get("/logs", async (req, res) => {
+    let logs = await db.collection("Log").find({}).toArray();
+    res.send(logs).status(200);
+});
+
+router.get('/statistics', async (req, res) => {
+    let temperature_himidity_list = await db.collection("DHT20_Sensor_Data").find({}).toArray();
+    let light_list = await db.collection("Light_Sensor_Data").find({}).toArray();
+    let distance_list = [];
+
+    let temperature_value_time = {
+        temperature: temperature_himidity_list.map((data) =>  data.Temperature),
+        time: temperature_himidity_list.map((data) =>  data.timestamp )
+    }
+    let humidity_value_time = {
+        humidity: temperature_himidity_list.map((data) =>  data.Humidity),
+        time: temperature_himidity_list.map((data) =>  data.timestamp )
+    }
+    let light_value_time = {
+        light: light_list.map((data) =>  data.intensity),
+        time: light_list.map((data) =>  data.timestamp )
+    }
+    let distance_value_time = {};
+
+    let result = {
+        temperature_value_time,
+        humidity_value_time,
+        light_value_time,
+        distance_value_time,
+    }
+    res.send(result).status(200);
+}
+);
 
 // Get a single record by ID (for now)
 /* Issue, cannot get ID or name at the moment
 */
 router.get("/:device", async (req, res) => {
     let devicename = req.params.device;
-    let status = true;
     let ledintensity = null;
     let fanspeed = null;
     let distance = null;
     let humidity = null;
     let temperature = null;
     let lightsensor = null;
-
-    if (devicename == 'led') {
-        ({ intensity: ledintensity } = await db.collection("Log").findOne({ intensity: { $exists: true } }) || {});
-    } else if (devicename == 'fan') {
-        ({ fanSpeed: fanspeed } = await db.collection("Log").findOne({ fanSpeed: { $exists: true } }) || {});
-    } else if (devicename == 'distance') {
-        distance = 0;
-    } else if (devicename == 'temperature') {
-        ({ Humidity: humidity, Temperature: temperature } = await db.collection("DHT20_Sensor_Data").findOne({}) || {});
-    } else if (devicename == 'lightsensor') {
-        ({ intensity: lightsensor } = await db.collection("Light_Sensor_Data").findOne({}) || {});
+    let status = null;
+    let deviceid = devicename === 'light_device' ? 'LED_1' : devicename === 'fan_device' ? 'FAN_1' : null;
+    if (deviceid) {
+        status = await db.collection("Device").find({ _id: deviceid }, {
+            projection: { deviceId: 1, status: 1 }
+        }).toArray();
     }
 
-    let data = { ledintensity, fanspeed, distance, humidity, temperature, lightsensor };
-    let schedule = null;
-    let automation = null;
-    let result = { devicename, status, data, schedule, automation };
-    res.send(result).status(200);
+    try {
+        if (devicename === 'light_device') {
+            ({ intensity: ledintensity } = await db.collection("Log").findOne(
+                { intensity: { $exists: true } },
+                { sort: { timestamp: -1 }, projection: { intensity: 1 } }
+            ) || {});
+        } else if (devicename === 'fan_device') {
+            ({ fanSpeed: fanspeed } = await db.collection("Log").findOne(
+                { fanSpeed: { $exists: true } },
+                { sort: { timestamp: -1 }, projection: { fanSpeed: 1 } }
+            ) || {});
+        } else if (devicename === 'distance') {
+            distance = 0;
+        } else if (devicename === 'temperature_humidity') {
+            ({ Humidity: humidity, Temperature: temperature } = await db.collection("DHT20_Sensor_Data").findOne(
+                {},
+                { sort: { timestamp: -1 }, projection: { Humidity: 1, Temperature: 1 } }
+            ) || {});
+        } else if (devicename === 'light') {
+            ({ intensity: lightsensor } = await db.collection("Light_Sensor_Data").findOne(
+                {},
+                { sort: { timestamp: -1 }, projection: { intensity: 1 } }
+            ) || {});
+        }
+
+        let data = { ledintensity, fanspeed, distance, humidity, temperature, lightsensor };
+        let schedule = null;
+        let automation = null;
+        let result = { devicename, status, data, schedule, automation };
+
+        res.status(200).send(result);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ error: "Internal Server Error" });
+    }
 });
+
 
 //-----UPDATE-----//
 
