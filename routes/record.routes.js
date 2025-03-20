@@ -116,7 +116,7 @@ router.get('/statistics', async (req, res) => {
 */
 router.get("/:device", async (req, res) => {
     let devicename = req.params.device;
-    let ledintensity = null;
+    let ledcolor = null;
     let fanspeed = null;
     let distance = null;
     let humidity = null;
@@ -132,9 +132,9 @@ router.get("/:device", async (req, res) => {
 
     try {
         if (devicename === 'light_device') {
-            ({ intensity: ledintensity } = await db.collection("Log").findOne(
-                { intensity: { $exists: true } },
-                { sort: { timestamp: -1 }, projection: { intensity: 1 } }
+            ({ LEDColor: ledcolor } = await db.collection("Log").findOne(
+                { LEDColor: { $exists: true } },
+                { sort: { timestamp: -1 }, projection: { LEDColor: 1 } }
             ) || {});
         } else if (devicename === 'fan_device') {
             ({ fanSpeed: fanspeed } = await db.collection("Log").findOne(
@@ -155,7 +155,7 @@ router.get("/:device", async (req, res) => {
             ) || {});
         }
 
-        let data = { ledintensity, fanspeed, distance, humidity, temperature, lightsensor };
+        let data = { ledcolor, fanspeed, distance, humidity, temperature, lightsensor };
         let schedule = null;
         let automation = null;
         let result = { devicename, status, data, schedule, automation };
