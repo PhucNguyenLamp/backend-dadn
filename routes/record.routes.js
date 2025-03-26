@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db/database.js";
 
 import { ObjectId } from "mongodb";
+import jwt from "jsonwebtoken";
 // import temperatureHumidity from "../models/DHT20SensorData.js";
 // import light from "../models/LightSensorData.js";
 
@@ -54,7 +55,7 @@ router.get("/", async (req, res) => {
             sort: { timestamp: -1 },
             projection: { LEDStatus: 1, LEDColor: 1 }
         });
-    
+
     let distancesensor = 0;
     let status = await db.collection("Device").find({}, {
         projection: { deviceId: 1, status: 1 }
@@ -88,16 +89,16 @@ router.get('/statistics', async (req, res) => {
     let distance_list = [];
 
     let temperature_value_time = {
-        temperature: temperature_himidity_list.map((data) =>  data.Temperature),
-        time: temperature_himidity_list.map((data) =>  data.timestamp )
+        temperature: temperature_himidity_list.map((data) => data.Temperature),
+        time: temperature_himidity_list.map((data) => data.timestamp)
     }
     let humidity_value_time = {
-        humidity: temperature_himidity_list.map((data) =>  data.Humidity),
-        time: temperature_himidity_list.map((data) =>  data.timestamp )
+        humidity: temperature_himidity_list.map((data) => data.Humidity),
+        time: temperature_himidity_list.map((data) => data.timestamp)
     }
     let light_value_time = {
-        light: light_list.map((data) =>  data.intensity),
-        time: light_list.map((data) =>  data.timestamp )
+        light: light_list.map((data) => data.intensity),
+        time: light_list.map((data) => data.timestamp)
     }
     let distance_value_time = {};
 
@@ -111,9 +112,136 @@ router.get('/statistics', async (req, res) => {
 }
 );
 
-// Get a single record by ID (for now)
-/* Issue, cannot get ID or name at the moment
-*/
+
+
+
+// TODO: UPDATE 
+
+router.post("/login", async (req, res) => {
+    let username = req.body.username;
+    let password = req.body.password;
+    try {
+        let user = await db.collection("User").findOne({ username }, {
+            projection: { username: 1, password: 1 }
+        });
+
+        if (user && user.password === password) {
+            const token = jwt.sign({ username: user.username }, "secret_key", { expiresIn: "1h" });
+            return res.status(200).send({ message: "Login successful", token, username });
+        }
+        res.status(401).send("Login failed");
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+router.post("/device_status", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let device_status = req.params.status;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!device_status || Object.keys(device_status).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, device_status)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
+router.post("/schedule", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let schedule = req.params.time;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!device_status || Object.keys(device_status).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
+router.post("/automation", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let condition = req.params.cond;
+        let do_something = req.params.do;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!condition || Object.keys(condition).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        if (!do_something || Object.keys(do_something).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
+router.get("/schedule", async (req, res) => {
+    try {
+        let devicename = req.params.device;
+        let schedule = req.params.time;
+        let result = await db.findOne(device, schedule)
+        res.status(200).send(result);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ error: "Internal Server Error" });
+    }
+});
+
+router.get("/automation", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let condition = req.params.cond;
+        let do_something = req.params.do;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!condition || Object.keys(condition).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        if (!do_something || Object.keys(do_something).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.findOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
 router.get("/:device", async (req, res) => {
     let devicename = req.params.device;
     let ledcolor = null;
@@ -168,8 +296,6 @@ router.get("/:device", async (req, res) => {
 });
 
 
-//-----UPDATE-----//
-
 router.patch("/:id", async (req, res) => {
     try {
         let aidee = new ObjectId(req.params.id);
@@ -191,21 +317,5 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
-//-----DELETE-----//
-
-router.delete("/:id", async (req, res) => {
-    try {
-        let aidee = new ObjectId(req.params.id);
-        const query = { _id: aidee };
-
-        const collection = await db.collection("records");
-        let result = await collection.deleteOne(query);
-
-        res.send(result).status(200);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Failed to delete record");
-    }
-});
 
 export default router;
