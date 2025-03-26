@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import records from "./routes/record.js";
+import records from "./routes/record.routes.js";
 
 const app = express();
 
@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.use("/record", records);
+app.use("/", records);
 
 app.use((err, _req, res, next) => {
     res.status(500).send("Unexpected error occured")
