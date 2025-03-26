@@ -27,6 +27,74 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.post("/device_status", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let device_status = req.params.status;
+        
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!device_status || Object.keys(device_status).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, device_status)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
+//post schedule
+router.post("/schedule", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let schedule = req.params.time;
+        
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!device_status || Object.keys(device_status).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
+
+router.post("/automation", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let condition = req.params.cond;
+        let do_something = req.params.do;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!condition || Object.keys(condition).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        if (!do_something || Object.keys(do_something).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.insertOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
 //-----RETRIEVE-----//
 
 //Get all records
@@ -167,7 +235,43 @@ router.get("/:device", async (req, res) => {
     }
 });
 
+router.get("/schedule", async (req, res) => {
+    try {
+        let devicename = req.params.device;
+        let schedule = req.params.time;
+        let result = await db.findOne(device, schedule)
+        res.status(200).send(result);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ error: "Internal Server Error" });
+    }
+});
 
+router.get("/automation", async (req, res) => {
+    try {
+        let device_name = req.params.device;
+        let condition = req.params.cond;
+        let do_something = req.params.do;
+
+        if (!device_name || Object.keys(device_name).length == 0) {
+            return res.status(400).send("Name cannot be empty!");
+        }
+
+        if (!condition || Object.keys(condition).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        if (!do_something || Object.keys(do_something).length == 0) {
+            return res.status(400).send("Status cannot be empty!");
+        }
+
+        let result = await collection.findOne(device_name, schedule)
+        res.status(204).send(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to add record");
+    }
+});
 //-----UPDATE-----//
 
 router.patch("/:id", async (req, res) => {
