@@ -44,32 +44,24 @@ router.get("/", async (req, res) => {
             projection: { intensity: 1 }
         });
 
-    let { fanSpeed: fanspeed } =
-        await db.collection("Log").findOne({ fanSpeed: { $exists: true } }, {
-            sort: { timestamp: -1 },
-            projection: { fanSpeed: 1 }
+    let { fanSpeed: fanspeed, status: fanStatus } =
+        await db.collection("Device").findOne({ _id: "FAN_1" }, {
+            projection: { fanSpeed: 1, status: 1 }
         });
-
-    let { LEDStatus: ledstatus, LEDColor: ledcolor } =
-        await db.collection("Log").findOne({ LEDColor: { $exists: true } }, {
-            sort: { timestamp: -1 },
-            projection: { LEDStatus: 1, LEDColor: 1 }
+    let { ledColor: ledcolor, status: ledStatus } =
+        await db.collection("Device").findOne({ _id: "LED_1" }, {
+            projection: { ledColor: 1, status: 1 }
         });
 
     let distancesensor = 0;
-    let status = await db.collection("Device").find({}, {
-        projection: { deviceId: 1, status: 1 }
-    }).toArray();
-    const fan_status = status.find((device) => device._id === "FAN_1").status;
-    const light_status = status.find((device) => device._id === "LED_1").status;
 
     let result = {
         temperature_humidity: {
             status: null, temperature, humidity
         },
         light: { status: null, lightsensor },
-        fan_device: { status: fan_status, fanspeed },
-        light_device: { status: light_status, ledcolor },
+        fan_device: { status: fanStatus, fanspeed },
+        light_device: { status: ledStatus, ledcolor },
         distance: {
             status: null, distancesensor
         }
@@ -253,21 +245,21 @@ router.get("/:device", async (req, res) => {
     let status = null;
     let deviceid = devicename === 'light_device' ? 'LED_1' : devicename === 'fan_device' ? 'FAN_1' : null;
     if (deviceid) {
-        status = await db.collection("Device").find({ _id: deviceid }, {
-            projection: { deviceId: 1, status: 1 }
-        }).toArray();
+        ({ status } = await db.collection("Device").findOne({ _id: deviceid }, {
+            projection: { status: 1 }
+        }));
     }
 
     try {
         if (devicename === 'light_device') {
-            ({ LEDColor: ledcolor } = await db.collection("Log").findOne(
-                { LEDColor: { $exists: true } },
-                { sort: { timestamp: -1 }, projection: { LEDColor: 1 } }
+            ({ ledColor: ledcolor } = await db.collection("Device").findOne(
+                { _id: "LED_1" },
+                { projection: { ledColor: 1 } }
             ) || {});
         } else if (devicename === 'fan_device') {
-            ({ fanSpeed: fanspeed } = await db.collection("Log").findOne(
-                { fanSpeed: { $exists: true } },
-                { sort: { timestamp: -1 }, projection: { fanSpeed: 1 } }
+            ({ fanSpeed: fanspeed } = await db.collection("Device").findOne(
+                { _id: "FAN_1" },
+                { projection: { fanSpeed: 1 } }
             ) || {});
         } else if (devicename === 'distance') {
             distance = 0;
