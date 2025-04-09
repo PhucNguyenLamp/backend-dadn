@@ -112,6 +112,7 @@ router.get('/statistics', async (req, res) => {
 router.post("/login", async (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+    console.log(req.body)
     try {
         let user = await db.collection("User").findOne({ username }, {
             projection: { username: 1, password: 1 }
@@ -130,9 +131,10 @@ router.post("/login", async (req, res) => {
 
 router.post("/device_status", async (req, res) => {
     try {
-        let device_name = req.params.device;
-        let device_status = req.params.status;
-
+        let device_name = req.body._id;
+        let device_status = req.body.status;
+        let data = req.body.data;
+        
         if (!device_name || Object.keys(device_name).length == 0) {
             return res.status(400).send("Name cannot be empty!");
         }
@@ -141,7 +143,19 @@ router.post("/device_status", async (req, res) => {
             return res.status(400).send("Status cannot be empty!");
         }
 
-        let result = await collection.insertOne(device_name, device_status)
+        console.log(device_name, device_status, data)
+
+        let result = await db.collection("Device").updateOne(
+            { _id: device_name },
+            { 
+            $set: { 
+                status: device_status, 
+                shouldUpdate: true, 
+                ...(device_name === "LED_1" ? { ledColor: data } : { fanSpeed: data }) 
+            } 
+            },
+            { upsert: true }
+        );
         res.status(204).send(result);
     } catch (err) {
         console.error(err);
@@ -151,18 +165,22 @@ router.post("/device_status", async (req, res) => {
 
 router.post("/schedule", async (req, res) => {
     try {
-        let device_name = req.params.device;
-        let schedule = req.params.time;
-
-        if (!device_name || Object.keys(device_name).length == 0) {
+        let device_name = req.body._id;
+        let schedule = req.body.schedule;
+        console.log(req.body)
+        if (!device_name) {
             return res.status(400).send("Name cannot be empty!");
         }
 
-        if (!device_status || Object.keys(device_status).length == 0) {
-            return res.status(400).send("Status cannot be empty!");
+        if (!schedule) {
+            return res.status(400).send("schedule cannot be empty!");
         }
 
-        let result = await collection.insertOne(device_name, schedule)
+        let result = await db.collection("Device").updateOne(
+            { _id: device_name },
+            { $set: { schedule } },
+            { upsert: true }
+        );
         res.status(204).send(result);
     } catch (err) {
         console.error(err);
@@ -172,23 +190,21 @@ router.post("/schedule", async (req, res) => {
 
 router.post("/automation", async (req, res) => {
     try {
-        let device_name = req.params.device;
-        let condition = req.params.cond;
-        let do_something = req.params.do;
+        let device_name = req.body._id;
+        let automation = req.body.automation;
 
         if (!device_name || Object.keys(device_name).length == 0) {
             return res.status(400).send("Name cannot be empty!");
         }
 
-        if (!condition || Object.keys(condition).length == 0) {
+        if (!automation || Object.keys(automation).length == 0) {
             return res.status(400).send("Status cannot be empty!");
         }
-
-        if (!do_something || Object.keys(do_something).length == 0) {
-            return res.status(400).send("Status cannot be empty!");
-        }
-
-        let result = await collection.insertOne(device_name, schedule)
+        let result = await db.collection("Device").updateOne(
+            { _id: device_name },
+            { $set: { automation } },
+            { upsert: true }
+        );
         res.status(204).send(result);
     } catch (err) {
         console.error(err);
@@ -196,43 +212,42 @@ router.post("/automation", async (req, res) => {
     }
 });
 
-router.get("/schedule", async (req, res) => {
-    try {
-        let devicename = req.params.device;
-        let schedule = req.params.time;
-        let result = await db.findOne(device, schedule)
-        res.status(200).send(result);
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        res.status(500).send({ error: "Internal Server Error" });
-    }
-});
+// router.get("/schedule", async (req, res) => {
+//     try {
+//         let device_name = req.query._id;
+//         let result = await db.collection('Device').findOne({_id: device_name})
+//         res.status(200).send(result);
+//     } catch (error) {
+//         console.error("Error fetching data:", error);
+//         res.status(500).send({ error: "Internal Server Error" });
+//     }
+// });
 
-router.get("/automation", async (req, res) => {
-    try {
-        let device_name = req.params.device;
-        let condition = req.params.cond;
-        let do_something = req.params.do;
+// router.get("/automation", async (req, res) => {
+//     try {
+//         let device_name = req.params.device;
+//         let condition = req.params.cond;
+//         let do_something = req.params.do;
 
-        if (!device_name || Object.keys(device_name).length == 0) {
-            return res.status(400).send("Name cannot be empty!");
-        }
+//         if (!device_name || Object.keys(device_name).length == 0) {
+//             return res.status(400).send("Name cannot be empty!");
+//         }
 
-        if (!condition || Object.keys(condition).length == 0) {
-            return res.status(400).send("Status cannot be empty!");
-        }
+//         if (!condition || Object.keys(condition).length == 0) {
+//             return res.status(400).send("Status cannot be empty!");
+//         }
 
-        if (!do_something || Object.keys(do_something).length == 0) {
-            return res.status(400).send("Status cannot be empty!");
-        }
+//         if (!do_something || Object.keys(do_something).length == 0) {
+//             return res.status(400).send("Status cannot be empty!");
+//         }
 
-        let result = await collection.findOne(device_name, schedule)
-        res.status(204).send(result);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Failed to add record");
-    }
-});
+//         let result = await collection.findOne(device_name, schedule)
+//         res.status(204).send(result);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send("Failed to add record");
+//     }
+// });
 
 router.get("/:device", async (req, res) => {
     let devicename = req.params.device;
@@ -243,6 +258,7 @@ router.get("/:device", async (req, res) => {
     let temperature = null;
     let lightsensor = null;
     let status = null;
+    let schedule = null;
     let deviceid = devicename === 'light_device' ? 'LED_1' : devicename === 'fan_device' ? 'FAN_1' : null;
     if (deviceid) {
         ({ status } = await db.collection("Device").findOne({ _id: deviceid }, {
@@ -252,14 +268,14 @@ router.get("/:device", async (req, res) => {
 
     try {
         if (devicename === 'light_device') {
-            ({ ledColor: ledcolor } = await db.collection("Device").findOne(
+            ({ ledColor: ledcolor, schedule } = await db.collection("Device").findOne(
                 { _id: "LED_1" },
-                { projection: { ledColor: 1 } }
+                { projection: { ledColor: 1, schedule: 1 } }
             ) || {});
         } else if (devicename === 'fan_device') {
-            ({ fanSpeed: fanspeed } = await db.collection("Device").findOne(
+            ({ fanSpeed: fanspeed, schedule } = await db.collection("Device").findOne(
                 { _id: "FAN_1" },
-                { projection: { fanSpeed: 1 } }
+                { projection: { fanSpeed: 1, schedule: 1 } }
             ) || {});
         } else if (devicename === 'distance') {
             distance = 0;
@@ -276,7 +292,6 @@ router.get("/:device", async (req, res) => {
         }
 
         let data = { ledcolor, fanspeed, distance, humidity, temperature, lightsensor };
-        let schedule = null;
         let automation = null;
         let result = { devicename, status, data, schedule, automation };
 
@@ -287,27 +302,6 @@ router.get("/:device", async (req, res) => {
     }
 });
 
-
-router.patch("/:id", async (req, res) => {
-    try {
-        let aidee = new ObjectId(req.params.id);
-        const query = { _id: aidee };
-        const updates = {
-            $set: {
-                name: req.body.name,
-                age: req.body.age,
-                gpa: req.body.gpa,
-            },
-        };
-
-        let collection = await db.collection("records");
-        let result = await collection.updateOne(query, updates);
-        res.send(result).status(200);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Failed to update record");
-    }
-});
 
 
 export default router;
