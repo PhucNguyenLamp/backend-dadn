@@ -145,15 +145,14 @@ router.post("/device_status", async (req, res) => {
 
         console.log(device_name, device_status, data)
 
+        let updateFields = { status: device_status, shouldUpdate: true };
+        if (data != null) {
+            Object.assign(updateFields, device_name === "LED_1" ? { ledColor: data } : { fanSpeed: data });
+        }
+
         let result = await db.collection("Device").updateOne(
             { _id: device_name },
-            { 
-            $set: { 
-                status: device_status, 
-                shouldUpdate: true, 
-                ...(device_name === "LED_1" ? { ledColor: data } : { fanSpeed: data }) 
-            } 
-            },
+            { $set: updateFields },
             { upsert: true }
         );
         res.status(204).send(result);
