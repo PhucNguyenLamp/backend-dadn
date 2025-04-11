@@ -80,22 +80,31 @@ router.get("/logs", async (req, res) => {
 });
 
 router.get('/statistics', async (req, res) => {
-    let temperature_himidity_list = await db.collection("DHT20_Sensor_Data").find({}).toArray();
-    let light_list = await db.collection("Light_Sensor_Data").find({}).toArray();
-    let distance_list = [];
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let temperature_himidity_list = await db.collection("DHT20_Sensor_Data").find({
+        timestamp: { $gte: today }
+    }).toArray();
+
+    let light_list = await db.collection("Light_Sensor_Data").find({
+        timestamp: { $gte: today }
+    }).toArray();
+
+    let distance_list = []; // Assuming distance data is not available in the database
 
     let temperature_value_time = {
         temperature: temperature_himidity_list.map((data) => data.Temperature),
         time: temperature_himidity_list.map((data) => data.timestamp)
-    }
+    };
     let humidity_value_time = {
         humidity: temperature_himidity_list.map((data) => data.Humidity),
         time: temperature_himidity_list.map((data) => data.timestamp)
-    }
+    };
     let light_value_time = {
         light: light_list.map((data) => data.intensity),
         time: light_list.map((data) => data.timestamp)
-    }
+    };
     let distance_value_time = {};
 
     let result = {
@@ -103,7 +112,7 @@ router.get('/statistics', async (req, res) => {
         humidity_value_time,
         light_value_time,
         distance_value_time,
-    }
+    };
     res.send(result).status(200);
 }
 );
