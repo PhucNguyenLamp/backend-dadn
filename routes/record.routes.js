@@ -107,12 +107,16 @@ router.get('/statistics', async (req, res) => {
 
 
 
-// TODO: UPDATE 
+// add middleware that logs a route name when used
+router.use((req, res, next) => {
+    console.log("Route accessed:", req.originalUrl);
+    next();
+}
+);
 
 router.post("/login", async (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
-    console.log(req.body)
     try {
         let user = await db.collection("User").findOne({ username }, {
             projection: { username: 1, password: 1 }
@@ -168,15 +172,12 @@ router.post("/schedule", async (req, res) => {
     try {
         let device_name = req.body._id;
         let schedule = req.body.schedule;
-        console.log(req.body)
-        if (!device_name) {
-            return res.status(400).send("Name cannot be empty!");
-        }
+        // console.log(req.body)
 
-        if (!schedule) {
-            return res.status(400).send("schedule cannot be empty!");
-        }
-
+        // 2025-04-10T17:00:00.000Z process this to hh:mm
+        const originalTime = schedule.time;
+        schedule.set = originalTime.split("T")[1].split(":").slice(0, 2).join(":");
+        console.log(schedule)
         let result = await db.collection("Device").updateOne(
             { _id: device_name },
             { $set: { schedule } },
