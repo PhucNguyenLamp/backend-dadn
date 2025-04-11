@@ -72,7 +72,11 @@ router.get("/", async (req, res) => {
 //logs
 router.get("/logs", async (req, res) => {
     let logs = await db.collection("Log").find({}).toArray();
-    res.send(logs).status(200);
+    let temperature_himidity_list = await db.collection("DHT20_Sensor_Data").find({}).toArray();
+    let light_list = await db.collection("Light_Sensor_Data").find({}).toArray();
+    let data = [...logs, ...temperature_himidity_list, ...light_list];
+
+    res.send(data).status(200);
 });
 
 router.get('/statistics', async (req, res) => {
