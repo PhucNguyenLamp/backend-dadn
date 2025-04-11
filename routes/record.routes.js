@@ -206,7 +206,6 @@ router.post("/automation", async (req, res) => {
             { $set: { automation } },
             { upsert: true }
         );
-        console.log(device)
         res.status(204).send(result);
     } catch (err) {
         console.error(err);
@@ -261,6 +260,8 @@ router.get("/:device", async (req, res) => {
     let lightsensor = null;
     let status = null;
     let schedule = null;
+    let automation = null;
+
     let deviceid = devicename === 'light_device' ? 'LED_1' : devicename === 'fan_device' ? 'FAN_1' : null;
     if (deviceid) {
         ({ status } = await db.collection("Device").findOne({ _id: deviceid }, {
@@ -270,14 +271,14 @@ router.get("/:device", async (req, res) => {
 
     try {
         if (devicename === 'light_device') {
-            ({ ledColor: ledcolor, schedule } = await db.collection("Device").findOne(
+            ({ ledColor: ledcolor, schedule, automation } = await db.collection("Device").findOne(
                 { _id: "LED_1" },
-                { projection: { ledColor: 1, schedule: 1 } }
+                { projection: { ledColor: 1, schedule: 1, automation: 1 } }
             ) || {});
         } else if (devicename === 'fan_device') {
-            ({ fanSpeed: fanspeed, schedule } = await db.collection("Device").findOne(
+            ({ fanSpeed: fanspeed, schedule, automation } = await db.collection("Device").findOne(
                 { _id: "FAN_1" },
-                { projection: { fanSpeed: 1, schedule: 1 } }
+                { projection: { fanSpeed: 1, schedule: 1, automation: 1 } }
             ) || {});
         } else if (devicename === 'distance') {
             distance = 0;
@@ -292,9 +293,7 @@ router.get("/:device", async (req, res) => {
                 { sort: { timestamp: -1 }, projection: { intensity: 1 } }
             ) || {});
         }
-
         let data = { ledcolor, fanspeed, distance, humidity, temperature, lightsensor };
-        let automation = null;
         let result = { devicename, status, data, schedule, automation };
 
         res.status(200).send(result);
