@@ -134,7 +134,9 @@ router.post("/device_status", async (req, res) => {
         let device_name = req.body._id;
         let device_status = req.body.status;
         let data = req.body.data;
-        
+        if (data == null || data == undefined) {
+            data = 0;
+        }
         if (!device_name || Object.keys(device_name).length == 0) {
             return res.status(400).send("Name cannot be empty!");
         }
@@ -204,6 +206,7 @@ router.post("/automation", async (req, res) => {
             { $set: { automation } },
             { upsert: true }
         );
+        console.log(device)
         res.status(204).send(result);
     } catch (err) {
         console.error(err);
