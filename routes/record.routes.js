@@ -227,42 +227,6 @@ router.post("/automation", async (req, res) => {
     }
 });
 
-// router.get("/schedule", async (req, res) => {
-//     try {
-//         let device_name = req.query._id;
-//         let result = await db.collection('Device').findOne({_id: device_name})
-//         res.status(200).send(result);
-//     } catch (error) {
-//         console.error("Error fetching data:", error);
-//         res.status(500).send({ error: "Internal Server Error" });
-//     }
-// });
-
-// router.get("/automation", async (req, res) => {
-//     try {
-//         let device_name = req.params.device;
-//         let condition = req.params.cond;
-//         let do_something = req.params.do;
-
-//         if (!device_name || Object.keys(device_name).length == 0) {
-//             return res.status(400).send("Name cannot be empty!");
-//         }
-
-//         if (!condition || Object.keys(condition).length == 0) {
-//             return res.status(400).send("Status cannot be empty!");
-//         }
-
-//         if (!do_something || Object.keys(do_something).length == 0) {
-//             return res.status(400).send("Status cannot be empty!");
-//         }
-
-//         let result = await collection.findOne(device_name, schedule)
-//         res.status(204).send(result);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send("Failed to add record");
-//     }
-// });
 
 router.get("/:device", async (req, res) => {
     let devicename = req.params.device;
