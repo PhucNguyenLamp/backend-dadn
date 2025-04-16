@@ -1,6 +1,6 @@
-import db from "../db/database"
+import db from "../db/database.js"
 
-export const updateDeviceSchedule = async (deviceId, schedule) => {
+export const updateDeviceSchedule = async (device_name, schedule) => {
     return await db.collection("Device").updateOne(
         { _id: device_name },
         { $set: { schedule } },

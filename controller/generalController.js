@@ -1,4 +1,4 @@
-import { insertNewRecord, fetchLatestDHT, fetchLatestLight, fetchFanID, fetchLEDid } from "../models/generalModule";
+import { insertNewRecord, fetchLatestDHT, fetchLatestLight, fetchFanID, fetchLEDid } from "../models/generalModule.js";
 
 export const createNewRecord = async (req, res) => {
     try {
@@ -18,17 +18,15 @@ export const createNewRecord = async (req, res) => {
 
 export const getNormalRecord = async (req, res) => {
     let { Humidity: humidity, Temperature: temperature } =
-        fetchLatestDHT();
+        await fetchLatestDHT();
 
     let { intensity: lightsensor } =
-        fetchLatestLight();
+        await fetchLatestLight();
 
     let { fanSpeed: fanspeed, status: fanStatus } =
-        fetchFanID();
+        await fetchFanID();
     let { ledColor: ledcolor, status: ledStatus } =
-        fetchLEDid();
-
-    let distancesensor = 0;
+        await fetchLEDid();
 
     let result = {
         temperature_humidity: {
@@ -37,9 +35,6 @@ export const getNormalRecord = async (req, res) => {
         light: { status: null, lightsensor },
         fan_device: { status: fanStatus, fanspeed },
         light_device: { status: ledStatus, ledcolor },
-        distance: {
-            status: null, distancesensor
-        }
     };
     res.send(result).status(200);
 };

@@ -1,4 +1,4 @@
-import { updateDeviceSchedule } from "../models/scheduleModel";
+import { updateDeviceSchedule } from "../models/scheduleModel.js";
 
 export const updateSchedule = async (req, res) => {
     try {

@@ -1,13 +1,9 @@
 import express from "express";
-import db from "../db/database.js";
-
-import { ObjectId } from "mongodb";
-import jwt from "jsonwebtoken";
-import generalRoutes from "./generalRoutes";
-import logRoutes from "./logRoutes";
-import userRoutes from "./userRoutes";
-import deviceRoutes from "./deviceRoutes";
-import scheduleRoutes from "./scheduleRoutes";
+import generalRoutes from "./generalRoutes.js";
+import logRoutes from "./logRoutes.js";
+import userRoutes from "./userRoutes.js";
+import deviceRoutes from "./deviceRoutes.js";
+import scheduleRoutes from "./scheduleRoutes.js";
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import db from "../db/database"
+import db from "../db/database.js"
 
 export const insertNewRecord = async (newDocument) => {
     return await db.collection("records").insertOne(newDocument);
