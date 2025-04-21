@@ -1,4 +1,4 @@
-import db from "../db/database"
+import db from "../db/database.js"
 
 export const fetchDeviceByID = async (id, projection = {}) => {
     return await db.collection("Device").findOne({ _id: id }, { projection });
@@ -14,7 +14,7 @@ export const fetchLatestDHT = async () => {
 export const fetchLatestLight = async () => {
     return await db.collection("Light_Sensor_Data").findOne({}, {
         sort: { timestamp: -1 },
-        projection: { timestamp: 1 }
+        projection: { intensity: 1 }
     });
 };
 
@@ -26,7 +26,7 @@ export const updateDeviceAutomation = async (deviceId, automation) => {
     );
 };
 
-export const updateDeviceStatus = async (deviceId, device_status, data) => {
+export const updateDeviceStatus = async (device_name, updateFields) => {
     return await db.collection("Device").updateOne(
         { _id: device_name },
         { $set: updateFields },

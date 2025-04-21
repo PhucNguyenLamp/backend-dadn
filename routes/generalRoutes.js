@@ -1,5 +1,5 @@
 import express from "express"
-import { createNewRecord, getNormalRecord } from "../controller/generalController"
+import { createNewRecord, getNormalRecord } from "../controller/generalController.js"
 
 const router = express.Router();
 

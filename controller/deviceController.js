@@ -1,4 +1,4 @@
-import { fetchDeviceByID, fetchLatestDHT, fetchLatestLight, updateDeviceAutomation, updateDeviceStatus } from "../models/deviceModel";
+import { fetchDeviceByID, fetchLatestDHT, fetchLatestLight, updateDeviceAutomation, updateDeviceStatus } from "../models/deviceModel.js";
 
 export const getDeviceData = async (req, res) => {
     try {
@@ -19,22 +19,17 @@ export const getDeviceData = async (req, res) => {
             const deviceData = await fetchDeviceByID(deviceId, { status: 1 });
             status = deviceData?.status;
         }
-
-        if (devicename === 'light_device') {
-            ({ ledColor: ledcolor, schedule, automation } = await fetchDeviceByID("LED_1", { ledcolor: 1, schedule: 1, automation: 1 }) || {});
-        } else if (devicename === 'fan_device') {   
+        if (device === 'light_device') {
+            ({ ledColor: ledcolor, schedule, automation } = await fetchDeviceByID("LED_1", { ledColor: 1, schedule: 1, automation: 1 }) || {});
+        } else if (device === 'fan_device') {   
             ({ fanSpeed: fanspeed, schedule, automation } = await fetchDeviceByID("FAN_1", { fanSpeed: 1, schedule: 1, automation: 1 }) || {});
-        } else if (devicename === 'distance') {
-            distance = 0;
-        } else if (devicename === 'temperature_humidity') {
-            ({ Humidity: humidity, Temperature: temperature } = fetchLatestDHT() || {});
-        } else if (devicename === 'light') {
+        } else if (device === 'temperature_humidity') {
+            ({ Humidity: humidity, Temperature: temperature } = await fetchLatestDHT() || {});
+        } else if (device === 'light') {
             ({ intensity: lightsensor } = await fetchLatestLight() || {});
         }
-
         const data = { ledcolor, fanspeed, distance, humidity, temperature, lightsensor };
         const result = { devicename: device, status, data, schedule, automation };
-
         res.status(200).send(result);
     } catch (err) {
         console.error("Error fetching device data:", err);
@@ -66,6 +61,7 @@ export const setDeviceStatus = async (req, res) => {
         let device_name = req.body._id;
         let device_status = req.body.status;
         let data = req.body.data;
+        console.log(device_name, device_status, data)
         if (data == null || data == undefined) {
             data = 0;
         }
@@ -77,14 +73,12 @@ export const setDeviceStatus = async (req, res) => {
             return res.status(400).send("Status cannot be empty!");
         }
 
-        console.log(device_name, device_status, data)
-
         let updateFields = { status: device_status, shouldUpdate: true };
         if (data != null) {
             Object.assign(updateFields, device_name === "LED_1" ? { ledColor: data } : { fanSpeed: data });
         }
-
-        let result = await updateDeviceStatus(device_name, device_status, data);
+        console.log(updateFields)
+        let result = await updateDeviceStatus(device_name, updateFields);
         res.status(204).send(result);
     } catch (err) {
         console.error(err);

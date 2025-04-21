@@ -1,4 +1,4 @@
-import { fetchLogs, fetchDHTData, fetchLightData } from "../models/logModel";
+import { fetchLogs, fetchDHTData, fetchLightData } from "../models/logModel.js";
 
 export const getLogs = async(req, res) => {
     try {
