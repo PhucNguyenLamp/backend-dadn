@@ -24,7 +24,7 @@ export const getDeviceData = async (req, res) => {
         } else if (device === 'fan_device') {   
             ({ fanSpeed: fanspeed, schedule, automation } = await fetchDeviceByID("FAN_1", { fanSpeed: 1, schedule: 1, automation: 1 }) || {});
         } else if (device === 'temperature_humidity') {
-            ({ Humidity: humidity, Temperature: temperature } = fetchLatestDHT() || {});
+            ({ Humidity: humidity, Temperature: temperature } = await fetchLatestDHT() || {});
         } else if (device === 'light') {
             ({ intensity: lightsensor } = await fetchLatestLight() || {});
         }
