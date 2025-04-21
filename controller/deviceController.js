@@ -28,10 +28,8 @@ export const getDeviceData = async (req, res) => {
         } else if (device === 'light') {
             ({ intensity: lightsensor } = await fetchLatestLight() || {});
         }
-
         const data = { ledcolor, fanspeed, distance, humidity, temperature, lightsensor };
         const result = { devicename: device, status, data, schedule, automation };
-
         res.status(200).send(result);
     } catch (err) {
         console.error("Error fetching device data:", err);

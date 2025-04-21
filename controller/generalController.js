@@ -28,6 +28,8 @@ export const getNormalRecord = async (req, res) => {
     let { ledColor: ledcolor, status: ledStatus } =
         await fetchLEDid();
 
+    console.log(lightsensor)
+
     let result = {
         temperature_humidity: {
             status: null, temperature, humidity
